@@ -62,6 +62,7 @@ El modelo de clasificación actualmente soporta las siguientes categorías diagn
 4. **Modelos y Checkpoints:**
     Asegúrate de tener los modelos pre-entrenados y *fine-tuned* en la estructura de carpetas esperada por `src/model_manager.py`:
 
+    ```text
     src/checkpoints/
     ├── classification/
     │   └── final_model/
@@ -69,6 +70,7 @@ El modelo de clasificación actualmente soporta las siguientes categorías diagn
     │   └── checkpoint-799/
     └── generation/
         └── checkpoint-51/
+    ```
 
 5. **Archivo `.env`:**
     Crea un archivo llamado `.env` en la raíz del proyecto para gestionar el token de Hugging Face, que se requiere para la autenticación durante la precarga del modelo.
