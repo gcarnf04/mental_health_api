@@ -34,7 +34,7 @@ class ModelManager:
         if self.cls_model is not None:
             return 
         
-        print(f"🔄 Cargando Clasificador...")
+        print("🔄 Cargando Clasificador...")
         path = os.path.join(CHECKPOINTS_DIR, "classification")
         
         self.cls_tokenizer = AutoTokenizer.from_pretrained(path)
@@ -46,12 +46,12 @@ class ModelManager:
         if self.sum_pipeline is not None:
             return 
         
-        print(f"🔄 Cargando Summarizer (T5)...")
+        print("🔄 Cargando Summarizer (T5)...")
         path = os.path.join(CHECKPOINTS_DIR, "summarization")
         tokenizer = AutoTokenizer.from_pretrained("t5-base")
         model = AutoModelForSeq2SeqLM.from_pretrained(path)
         
-        device_id = 0 if get_device() == "cuda" else -1
+        device_id = 0 if get_device() == "cuda" else -1 
         self.sum_pipeline = pipeline(
             "summarization", 
             model=model, 
@@ -65,7 +65,7 @@ class ModelManager:
         if self.gen_model is not None:
             return
 
-        print(f"🔄 Cargando Generador (Llama 3 + Adapter)...")
+        print("🔄 Cargando Generador (Llama 3 + Adapter)...")
         path = os.path.join(CHECKPOINTS_DIR, "generation")
         base_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 
@@ -74,6 +74,7 @@ class ModelManager:
         
         if device == "cuda":
             print("   ⚡ Modo GPU detectado: Usando 4-bit quantization")
+            # CUDA: Usa cuantización de 4 bits para ahorrar VRAM.
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
@@ -95,6 +96,7 @@ class ModelManager:
         # 4. Cargar Modelo Base
         if self.base_llama_model is None:
             print(f"   ↳ Cargando Llama Base en {device.upper()}...")
+            # Aquí se aplican las configuraciones dinámicas de device_map y dtype
             self.base_llama_model = AutoModelForCausalLM.from_pretrained(
                 base_model_id,
                 quantization_config=bnb_config,
@@ -110,7 +112,7 @@ class ModelManager:
             if device == "cuda":
                 torch.cuda.empty_cache()
             elif device == "mps":
-                torch.mps.empty_cache() # <<< AÑADIDO PARA MPS
+                torch.mps.empty_cache()
             
         print(f"   ↳ Aplicando adaptador LoRA desde {path}...")
         self.gen_model = PeftModel.from_pretrained(self.base_llama_model, path)
