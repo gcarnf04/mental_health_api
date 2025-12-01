@@ -56,7 +56,6 @@ function clearChat() {
       <p>Enter patient clinical observations or case descriptions to receive:</p>
       <ul>
         <li>🔍 Automated condition classification</li>
-        <li>📋 Clinical summary extraction</li>
         <li>💊 Evidence-based treatment recommendations</li>
       </ul>
     </div>
@@ -202,16 +201,6 @@ function formatClassification(classification) {
   return html;
 }
 
-// Format summary
-function formatSummary(summary) {
-  return `
-    <div class="summary-result">
-      <h3>📋 Clinical Summary</h3>
-      <p>${escapeHtml(summary)}</p>
-    </div>
-  `;
-}
-
 // Format recommendation
 function formatRecommendation(recommendation) {
   return `
@@ -292,16 +281,12 @@ async function analyzeCase() {
     
     // Show classification
     if (autoClassify.checked) {
-      await simulateDelay(500);
+      await simulateDelay(100);
       addBotMessage(formatClassification(data.classification));
     }
     
-    // Show summary
-    await simulateDelay(800);
-    addBotMessage(formatSummary(data.summary));
-    
     // Show recommendation
-    await simulateDelay(1000);
+    await simulateDelay(100);
     addBotMessage(formatRecommendation(data.recommendation));
     
   } catch (error) {
