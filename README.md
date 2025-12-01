@@ -1,6 +1,3 @@
-¡Por supuesto\! Como has realizado cambios significativos en la estructura del proyecto (eliminación de `src` y aplanamiento de carpetas) y hemos implementado las mejores prácticas de ejecución para **MPS (Apple Silicon)**, es fundamental actualizar el archivo **README** para que las instrucciones sean precisas.
-
-Aquí tienes el `README.md` actualizado con la nueva estructura y los comandos de ejecución corregidos para el entorno de desarrollo y la contenerización.
 
 -----
 
