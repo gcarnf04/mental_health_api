@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict
+from typing import Dict, Optional
 
 class DiagnosisRequest(BaseModel):
     patient_text: str = """
@@ -30,6 +30,8 @@ class DiagnosisRequest(BaseModel):
     With Anxious Distress: Mild. The patient reports some feelings of tension and restlessness, but this is not the predominant feature.
     With Melancholic Features: Strongly suggested. Features include profound anhedonia, lack of reactivity to usually pleasurable stimuli, early morning awakening, psychomotor retardation, excessive guilt, and anorexia/weight loss.
 """
+    auto_classify: Optional[bool] = True
+    pathology: Optional[str] = None
 
 class ClassificationResult(BaseModel):
     pathology: str

@@ -9,9 +9,19 @@ LABEL_MAP = {
     3: "Anxiety",
     4: "Schizophrenia"
 }
-
 def get_device():
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    """
+    Determina el dispositivo óptimo: MPS (Apple Silicon), CUDA (NVIDIA), o CPU.
+    """
+    if torch.backends.mps.is_available():
+        # Utiliza el backend de Metal Performance Shaders (MPS) de Apple
+        return "mps"
+    elif torch.cuda.is_available():
+        # Alternativa para GPUs NVIDIA
+        return "cuda"
+    else:
+        # Modo por defecto
+        return "cpu"
 
 def clean_text(text: str) -> str:
     """Limpieza de texto básica"""

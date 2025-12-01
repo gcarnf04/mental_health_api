@@ -12,10 +12,9 @@ from transformers import (
     BitsAndBytesConfig
 )
 from peft import PeftModel
-from dotenv import load_dotenv
 from .utils import clean_text, LABEL_MAP, get_device
 
-CHECKPOINTS_DIR = "src/checkpoints"
+CHECKPOINTS_DIR = "checkpoints"
 
 class ModelManager:
     def __init__(self):
@@ -31,29 +30,26 @@ class ModelManager:
         self.gen_tokenizer = None
         self.base_llama_model = None
 
-    def load_classifier(self, model_name):
-        if self.current_cls_name == model_name and self.cls_model is not None:
+    def load_classifier(self):
+        if self.cls_model is not None:
             return 
         
-        print(f"🔄 Cargando Clasificador: {model_name}...")
-        path = os.path.join(CHECKPOINTS_DIR, "classification", model_name)
+        print(f"🔄 Cargando Clasificador...")
+        path = os.path.join(CHECKPOINTS_DIR, "classification")
         
         self.cls_tokenizer = AutoTokenizer.from_pretrained(path)
         self.cls_model = AutoModelForSequenceClassification.from_pretrained(path).to(get_device())
-        self.cls_model = torch.compile(self.cls_model)
         self.cls_model.eval()
-        self.current_cls_name = model_name
         print("✅ Clasificador cargado.")
 
-    def load_summarizer(self, model_name):
-        if self.current_sum_name == model_name and self.sum_pipeline is not None:
+    def load_summarizer(self):
+        if self.sum_pipeline is not None:
             return 
         
-        print(f"🔄 Cargando Summarizer (T5): {model_name}...")
-        path = os.path.join(CHECKPOINTS_DIR, "summarization", model_name)
+        print(f"🔄 Cargando Summarizer (T5)...")
+        path = os.path.join(CHECKPOINTS_DIR, "summarization")
         tokenizer = AutoTokenizer.from_pretrained("t5-base")
         model = AutoModelForSeq2SeqLM.from_pretrained(path)
-        model = torch.compile(model)
         
         device_id = 0 if get_device() == "cuda" else -1
         self.sum_pipeline = pipeline(
@@ -62,16 +58,15 @@ class ModelManager:
             tokenizer=tokenizer, 
             device=device_id
         )
-        self.current_sum_name = model_name
         print("✅ Summarizer cargado.")
 
-    def load_generator(self, adapter_name):
+    def load_generator(self):
         # 1. Verificar si ya tenemos este adaptador cargado
-        if self.current_gen_name == adapter_name and self.gen_model is not None:
+        if self.gen_model is not None:
             return
 
-        print(f"🔄 Cargando Generador (Llama 3 + Adapter): {adapter_name}...")
-        path = os.path.join(CHECKPOINTS_DIR, "generation", adapter_name)
+        print(f"🔄 Cargando Generador (Llama 3 + Adapter)...")
+        path = os.path.join(CHECKPOINTS_DIR, "generation")
         base_model_id = "meta-llama/Llama-3.2-1B-Instruct"
 
         # 2. Configuración Dinámica según Hardware (CPU vs GPU)
@@ -86,9 +81,10 @@ class ModelManager:
             )
             model_dtype = torch.bfloat16 
         else:
-            print("   🐢 Modo CPU detectado: Desactivando 4-bit (Standard Loading)")
+            # Para MPS (Mac) y CPU
+            print(f"   🐢 Modo {device.upper()} detectado: Desactivando 4-bit (Standard Loading)")
             bnb_config = None 
-            model_dtype = torch.float32
+            model_dtype = torch.bfloat16 if device == "mps" else torch.float32
 
         # 3. Cargar Tokenizer
         if self.gen_tokenizer is None:
@@ -110,13 +106,15 @@ class ModelManager:
         if self.gen_model is not None:
             del self.gen_model
             gc.collect()
+            
             if device == "cuda":
                 torch.cuda.empty_cache()
+            elif device == "mps":
+                torch.mps.empty_cache() # <<< AÑADIDO PARA MPS
             
         print(f"   ↳ Aplicando adaptador LoRA desde {path}...")
         self.gen_model = PeftModel.from_pretrained(self.base_llama_model, path)
         self.gen_model.eval()
-        self.current_gen_name = adapter_name
         print("✅ Generador cargado.")
 
     def process_request(self, text):
@@ -126,7 +124,7 @@ class ModelManager:
             cleaned_text, 
             padding=True, 
             truncation=True, 
-            max_length=192, 
+            max_length=512,
             return_tensors="pt"
         ).to(self.cls_model.device)
 
@@ -142,8 +140,8 @@ class ModelManager:
         # --- ETAPA 2: SUMMARIZATION ---
         summary_result = self.sum_pipeline(
             cleaned_text,
-            min_length=64, # Ajustado para ser más rápido
-            max_length=256,
+            min_length=256,
+            max_length=512,
             clean_up_tokenization_spaces=True
         )
         diagnosis_summary = summary_result[0]["summary_text"]
@@ -181,7 +179,8 @@ class ModelManager:
         with torch.no_grad():
             output_tokens = self.gen_model.generate(
                 **input_ids,
-                max_new_tokens=512,
+                max_new_tokens=256,
+                min_new_tokens=128,
                 do_sample=True,
                 temperature=0.7,
                 top_p=0.9,
