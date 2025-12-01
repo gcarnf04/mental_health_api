@@ -1,6 +1,7 @@
 import os
 import re
 import gc
+import time
 import torch
 import numpy as np
 from transformers import (
@@ -120,6 +121,7 @@ class ModelManager:
         print("✅ Generador cargado.")
 
     def process_request(self, text):
+        inicio = time.time()
         # --- ETAPA 1: CLASIFICACIÓN ---
         cleaned_text = clean_text(text)
         inputs = self.cls_tokenizer(
@@ -198,6 +200,8 @@ class ModelManager:
         # Limpiar prefijo "Recommendation:" si existe
         match = re.search(r"Recommendation:\s*", response, re.IGNORECASE)
         final_recommendation = response[match.end():].strip() if match else response
+        fin = time.time()
+        print(f"⏱️ Tiempo de procesamiento: {fin - inicio:.2f} segundos")
 
         return {
             "classification": {
