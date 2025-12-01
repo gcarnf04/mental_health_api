@@ -1,86 +1,111 @@
-# 🧠 Mental Health AI Pipeline (mental-health-api)
+¡Por supuesto\! Como has realizado cambios significativos en la estructura del proyecto (eliminación de `src` y aplanamiento de carpetas) y hemos implementado las mejores prácticas de ejecución para **MPS (Apple Silicon)**, es fundamental actualizar el archivo **README** para que las instrucciones sean precisas.
 
-Una API de alto rendimiento basada en FastAPI que implementa un *pipeline* de tres etapas de Modelos de Lenguaje Grandes (LLMs) y Modelos de Aprendizaje Automático (ML) para procesar notas clínicas (texto de pacientes) y generar una clasificación diagnóstica, un resumen del caso y recomendaciones de tratamiento basadas en evidencia.
+Aquí tienes el `README.md` actualizado con la nueva estructura y los comandos de ejecución corregidos para el entorno de desarrollo y la contenerización.
 
-El proyecto está diseñado para ser desplegado fácilmente en entornos como Hugging Face Spaces o Docker.
+-----
+
+## 🧠 Mental Health AI Pipeline (`mental-health-api`) - README.md
+
+Una API de alto rendimiento basada en **FastAPI** que implementa un *pipeline* de tres etapas de Modelos de Lenguaje Grandes (LLMs) y Modelos de Aprendizaje Automático (ML) para procesar notas clínicas (texto de pacientes) y generar una clasificación diagnóstica, un resumen del caso y recomendaciones de tratamiento basadas en evidencia.
+
+El proyecto está diseñado con soporte optimizado para **Apple Silicon (MPS)** y **NVIDIA (CUDA)** en entornos de desarrollo y es fácil de desplegar en Docker.
 
 ## ✨ Características Principales
 
 Esta API implementa una tubería (pipeline) de procesamiento de lenguaje natural (PLN) que consta de tres etapas consecutivas:
 
-1. **Clasificación Diagnóstica (Clasificador Fine-Tuned):** Clasifica el texto clínico de entrada en una de las categorías patológicas definidas.
-    * **Modelos utilizados:** Modelo de Hugging Face de Clasificación de Secuencias.
-2. **Resumen Clínico (Modelo T5):** Genera un resumen conciso y relevante del caso a partir del texto completo del paciente.
-    * **Modelos utilizados:** Modelo T5 (encoder-decoder) *fine-tuned*.
-3. **Generación de Recomendaciones (Llama 3 + LoRA):** Utiliza la clasificación y el resumen para generar una recomendación de tratamiento completa, incluyendo psicoterapia, consideraciones de medicación e intervenciones de estilo de vida.
-    * **Modelos utilizados:** **Llama-3-2-1B-Instruct**, optimizado con un adaptador LoRA y cargado en 4-bit (si hay GPU disponible).
+1.  **Clasificación Diagnóstica (Clasificador Fine-Tuned):** Clasifica el texto clínico de entrada en una de las categorías patológicas definidas.
+      * **Modelos utilizados:** Modelo de Hugging Face de Clasificación de Secuencias.
+2.  **Resumen Clínico (Modelo T5):** Genera un resumen conciso y relevante del caso a partir del texto completo del paciente.
+      * **Modelos utilizados:** Modelo T5 (*encoder-decoder fine-tuned*).
+3.  **Generación de Recomendaciones (Llama 3 + LoRA):** Utiliza la clasificación y el resumen para generar una recomendación de tratamiento completa, incluyendo psicoterapia, consideraciones de medicación e intervenciones de estilo de vida.
+      * **Optimización:** El modelo **Llama-3-2-1B-Instruct** se carga optimizado con un adaptador **LoRA** y usa cuantización de **4-bit** (si hay GPU disponible) o el backend **MPS** (si se detecta Apple Silicon).
 
 ### Patologías Soportadas
 
-El modelo de clasificación actualmente soporta las siguientes categorías diagnósticas:
+  * BPD (Trastorno Límite de la Personalidad)
+  * Bipolar Disorder (Trastorno Bipolar)
+  * Depression (Depresión)
+  * Anxiety (Ansiedad)
+  * Schizophrenia (Esquizofrenia)
 
-* BPD (Trastorno Límite de la Personalidad)
-* Bipolar Disorder (Trastorno Bipolar)
-* Depression (Depresión)
-* Anxiety (Ansiedad)
-* Schizophrenia (Esquizofrenia)
+-----
 
 ## ⚙️ Configuración y Ejecución
 
+### Nueva Estructura del Proyecto
+
+La estructura actual del proyecto se ha simplificado. Los directorios principales (`api` y `frontend`) están en la raíz:
+
+```text
+/mental-health-api
+├── api/             <-- Código Python (FastAPI)
+├── frontend/        <-- Interfaz Gráfica (HTML, CSS, JS)
+├── checkpoints/     <-- Modelos pre-entrenados
+├── requirements.txt
+└── Dockerfile
+```
+
 ### Requisitos
 
-* Python **>=3.11**
-* **GPU (Opcional pero Recomendado):** Para el módulo de generación, se recomienda una GPU con soporte CUDA para habilitar la cuantización de 4 bits y optimizar el rendimiento.
+  * Python **\>=3.11**
+  * **GPU (Opcional):** Se recomienda **NVIDIA CUDA** o **Apple Silicon MPS** para acelerar la etapa de Generación con Llama 3.
 
 ### Instalación
 
-1. **Clonar el repositorio:**
-
-    ```bash
-    git clone <URL_DEL_REPOSITORIO>
-    cd mental-health-api
-    ```
-
-2. **Crear y activar un entorno virtual:**
-
+1.  **Clonar el repositorio y entrar al directorio.**
+2.  **Crear y activar un entorno virtual:**
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # En Linux/macOS
-    # .venv\Scripts\activate   # En Windows
     ```
-
-3. **Instalar dependencias:**
-    Las dependencias se encuentran en `requirements.txt`.
-
+3.  **Instalar dependencias:**
     ```bash
     pip install -r requirements.txt
-
     ```
-
-    *Nota: Si estás usando una GPU, es posible que necesites instalar `torch` con el comando específico de PyTorch para tu versión de CUDA, como se sugiere en `requirements.txt`.*
-
-4. **Modelos y Checkpoints:**
-    Asegúrate de tener los modelos pre-entrenados y *fine-tuned* en la estructura de carpetas esperada por `src/model_manager.py`:
-
-    ```text
-    src/checkpoints/
-    ├── classification/
-    │   └── final_model/
-    ├── summarization/
-    │   └── checkpoint-799/
-    └── generation/
-        └── checkpoint-51/
+4.  **Token de Hugging Face:**
+    Crea un archivo llamado `.env` en la raíz del proyecto para la autenticación, si es necesaria para descargar modelos privados o realizar la precarga:
     ```
-
-5. **Archivo `.env`:**
-    Crea un archivo llamado `.env` en la raíz del proyecto para gestionar el token de Hugging Face, que se requiere para la autenticación durante la precarga del modelo.
-
-    .env
+    # .env
     HF_TOKEN="tu_token_de_hugging_face"
+    ```
 
-## Ejecución Local
+-----
 
-Para ejecutar la API localmente usando Uvicorn:
+## 3\. 🏃 Ejecución y Despliegue
+
+### 3.1 Ejecución en Entorno Local (con GPU MPS)
+
+Para ejecutar la aplicación localmente y aprovechar la **GPU de Apple Silicon (MPS)**, debes ejecutarla directamente en el *host* (fuera de Docker).
+
+**Comando de Ejecución Local:**
 
 ```bash
-python -m src
+uvicorn api.__main__:app --host 0.0.0.0 --port 8001 --reload
+```
+
+  * **Verificación:** Accede a `http://localhost:8001/` y verifica que el **Dispositivo de Ejecución** muestre **🍎 GPU (Apple Silicon)**.
+
+### 3.2 Despliegue Contenerizado (Docker)
+
+Para desplegar la aplicación en un contenedor de Docker, debes usar el nombre del módulo `api.__main__`.
+
+#### 1\. Construir la Imagen
+
+```bash
+docker build -t mental-health-api .
+```
+
+#### 2\. Ejecutar con Aceleración (NVIDIA CUDA)
+
+Si tienes una GPU NVIDIA, usa el *flag* `--gpus all` para exponer el hardware al contenedor, lo cual permite que PyTorch use CUDA.
+
+**Comando de Ejecución con GPU:**
+
+```bash
+docker run -d -p 8001:8001 --gpus all -e HF_TOKEN="<TU_TOKEN_HF>" --name mental_app mental-health-api
+```
+
+#### 3\. Probar la Aplicación
+
+La aplicación es accesible en: **`http://localhost:8001/`**
